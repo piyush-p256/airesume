@@ -55,7 +55,7 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
   const [error, setError] = useState('')
   const resumeRef = useRef<HTMLDivElement>(null)
 
-  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000'
 
   const [resumeData, setResumeData] = useState<ResumeData>({
     name: 'Your Name',
@@ -129,23 +129,47 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
 
       // Try to parse JSON response
       try {
-        const jsonMatch = aiContent.match(/\{[\s\S]*\}/)
+        // Improved JSON parsing: handles markdown code blocks
+        let jsonString = aiContent
+        const jsonMatch = aiContent.match(/```json\n([\s\S]*?)\n```/)
         if (jsonMatch) {
-          const parsedData = JSON.parse(jsonMatch[0])
-          
-          // Update resume data with AI response
-          setResumeData((prev) => ({
-            name: parsedData.name || prev.name,
-            title: parsedData.title || prev.title,
-            email: parsedData.email || prev.email,
-            phone: parsedData.phone || prev.phone,
-            location: parsedData.location || prev.location,
-            summary: parsedData.summary || prev.summary,
-            skills: parsedData.skills || prev.skills,
-            experience: parsedData.experience || prev.experience,
-            education: parsedData.education || prev.education,
-            projects: parsedData.projects || prev.projects,
-          }))
+          jsonString = jsonMatch[1]
+        } else {
+          const looseJsonMatch = aiContent.match(/\{[\s\S]*\}/)
+          if (looseJsonMatch) {
+            jsonString = looseJsonMatch[0]
+          }
+        }
+
+        const parsedData = JSON.parse(jsonString)
+        
+        // Validate that parsedData has at least one resume key
+        const resumeKeys = ['name', 'title', 'email', 'phone', 'location', 'summary', 'skills', 'experience', 'education', 'projects'];
+        const hasResumeData = Object.keys(parsedData).some(key => resumeKeys.includes(key));
+
+        if (hasResumeData) {
+          // Update resume data with AI response (only update provided fields)
+          setResumeData((prev) => {
+            const newProjects = parsedData.projects ? parsedData.projects.map(p => ({
+              name: p.name || '',
+              description: p.description || '',
+              tech: p.tech || '',
+            })) : prev.projects;
+
+            return {
+              ...prev,
+              name: parsedData.name || prev.name,
+              title: parsedData.title || prev.title,
+              email: parsedData.email || prev.email,
+              phone: parsedData.phone || prev.phone,
+              location: parsedData.location || prev.location,
+              summary: parsedData.summary || prev.summary,
+              skills: parsedData.skills || prev.skills,
+              experience: parsedData.experience || prev.experience,
+              education: parsedData.education || prev.education,
+              projects: newProjects,
+            }
+          })
 
           const aiResponse: Message = {
             role: 'assistant',
@@ -153,15 +177,11 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
           }
           setMessages((prev) => [...prev, aiResponse])
         } else {
-          // Fallback: show AI response as message
-          const aiResponse: Message = {
-            role: 'assistant',
-            content: aiContent,
-          }
-          setMessages((prev) => [...prev, aiResponse])
+          // If JSON is not in the expected resume format, treat as plain text
+          throw new Error("JSON response did not contain resume data.");
         }
       } catch (parseError) {
-        // If not JSON, just show the response
+        // If not valid JSON or not in expected format, just show the raw response
         const aiResponse: Message = {
           role: 'assistant',
           content: aiContent,
