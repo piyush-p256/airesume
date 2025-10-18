@@ -189,28 +189,66 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
         const hasResumeData = Object.keys(parsedData).some(key => resumeKeys.includes(key));
 
         if (hasResumeData) {
-          // Update resume data with AI response (only update provided fields)
-          setResumeData((prev) => {
-            const newSections = prev.sections.map(section => {
-              if (parsedData[section.id]) {
-                return { ...section, content: parsedData[section.id] };
-              }
-              return section;
-            });
+          // Update resume data with AI response
+          setResumeData(prev => {
+            const newResumeData = { ...prev };
 
-            return {
-              ...prev,
-              name: parsedData.name || prev.name,
-              title: parsedData.title || prev.title,
-              email: parsedData.email || prev.email,
-              phone: parsedData.phone || prev.phone,
-              location: parsedData.location || prev.location,
-              linkedin: parsedData.linkedin || prev.linkedin,
-              github: parsedData.github || prev.github,
-              summary: parsedData.summary || prev.summary,
-              sections: newSections,
+            const isAiValueEmpty = (value) => {
+              if (value === null || value === undefined || value === '') return true;
+              if (Array.isArray(value) && value.length === 0) return true;
+              if (typeof value === 'object' && Object.keys(value).length === 0) return true;
+              return false;
             };
-          })
+
+            const knownSectionIds = prev.sections.map(s => s.id);
+            const topLevelKeys = ['name', 'title', 'email', 'phone', 'location', 'summary', 'linkedin', 'github'];
+
+            for (const key in parsedData) {
+              if (Object.prototype.hasOwnProperty.call(parsedData, key)) {
+                const value = parsedData[key];
+                if (isAiValueEmpty(value)) continue;
+
+                if (topLevelKeys.includes(key)) {
+                  newResumeData[key] = value;
+                } else if (knownSectionIds.includes(key)) {
+                  // It's an existing section
+                  newResumeData.sections = newResumeData.sections.map(section => {
+                    if (section.id === key) {
+                      if (section.id === 'skills') {
+                        const newSkillsContent = { ...section.content };
+                        const skillsMapping = {
+                          programming_languages: 'programmingLanguages',
+                          frameworks_and_libraries: 'frameworks',
+                          database_management: 'databaseManagement',
+                          developer_tools: 'versionControl',
+                          cloud_platforms: 'cloudPlatforms',
+                        };
+                        for (const aiKey in value) {
+                          const frontendKey = skillsMapping[aiKey] || aiKey;
+                          if (Object.prototype.hasOwnProperty.call(value, aiKey) && !isAiValueEmpty(value[aiKey])) {
+                            newSkillsContent[frontendKey] = value[aiKey];
+                          }
+                        }
+                        return { ...section, content: newSkillsContent };
+                      } else {
+                        return { ...section, content: value };
+                      }
+                    }
+                    return section;
+                  });
+                } else {
+                  // It's a new section
+                  newResumeData.sections.push({
+                    id: key,
+                    type: 'custom',
+                    title: key.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').toUpperCase(),
+                    content: value,
+                  });
+                }
+              }
+            }
+            return newResumeData;
+          });
 
           const aiResponse: Message = {
             role: 'assistant',

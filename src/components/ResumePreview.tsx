@@ -110,7 +110,7 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
       case 'skills':
         return (
           <div>
-            <p><span className="font-bold">Programming Languages:</span> <Editable value={(section.content.programmingLanguages || []).join(', ')} onSave={(v) => handleSectionContentChange(section.id, { ...section.content, programmingLanguages: v.split(',').map(s => s.trim())})} /></p>
+                        <p><span className="font-bold">Programming Languages:</span> <Editable value={(section.content.programmingLanguages || []).join(', ')} onSave={(v) => handleSectionContentChange(section.id, { ...section.content, programmingLanguages: v.split(',').map(s => s.trim())})} /></p>
             <p><span className="font-bold">Frameworks & Libraries:</span> <Editable value={(section.content.frameworks || []).join(', ')} onSave={(v) => handleSectionContentChange(section.id, { ...section.content, frameworks: v.split(',').map(s => s.trim())})} /></p>
             <p><span className="font-bold">Database Management:</span> <Editable value={(section.content.databaseManagement || []).join(', ')} onSave={(v) => handleSectionContentChange(section.id, { ...section.content, databaseManagement: v.split(',').map(s => s.trim())})} /></p>
             <p><span className="font-bold">Developer Tools:</span> <Editable value={(section.content.versionControl || []).join(', ')} onSave={(v) => handleSectionContentChange(section.id, { ...section.content, versionControl: v.split(',').map(s => s.trim())})} /></p>
