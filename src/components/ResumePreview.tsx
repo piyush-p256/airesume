@@ -1,258 +1,239 @@
-import { forwardRef, useState } from 'react'
-import { Mail, Phone, MapPin, Edit2, Check, X } from 'lucide-react'
-import type { ResumeData } from '../pages/BuilderPage'
+import React from 'react';
+import { ResumeData, Section } from '../pages/BuilderPage';
+import { PlusCircle, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 
 interface ResumePreviewProps {
-  data: ResumeData
-  onDataChange: (data: ResumeData) => void
-  theme: 'dark' | 'light'
+  data: ResumeData;
+  onDataChange: (data: ResumeData) => void;
 }
 
-const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
-  ({ data, onDataChange, theme }, ref) => {
-    const [editingField, setEditingField] = useState<string | null>(null)
-    const [editValue, setEditValue] = useState<string>('')
+const Editable = ({ value, onSave, className = '' }: { value: string, onSave: (v: string) => void, className?: string }) => (
+  <span
+    contentEditable
+    suppressContentEditableWarning
+    className={`hover:bg-blue-100 focus:bg-blue-100 focus:outline-none rounded px-1 ${className}`}
+    onBlur={(e) => onSave(e.currentTarget.innerText)}
+    dangerouslySetInnerHTML={{ __html: value || '' }}
+  />
+);
 
-    const startEdit = (field: string, value: string) => {
-      setEditingField(field)
-      setEditValue(value)
-    }
+const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ data, onDataChange }, ref) => {
 
-    const saveEdit = (field: string) => {
-      const keys = field.split('.')
-      const newData = { ...data }
-      let current: any = newData
+  const handleFieldChange = (field: keyof ResumeData, value: any) => {
+    onDataChange({ ...data, [field]: value });
+  };
 
-      for (let i = 0; i < keys.length - 1; i++) {
-        current = current[keys[i]]
+  const handleSectionTitleChange = (sectionId: string, newTitle: string) => {
+    const newSections = data.sections.map(section => 
+      section.id === sectionId ? { ...section, title: newTitle } : section
+    );
+    onDataChange({ ...data, sections: newSections });
+  };
+
+  const handleSectionContentChange = (sectionId: string, newContent: any) => {
+    const newSections = data.sections.map(section =>
+      section.id === sectionId ? { ...section, content: newContent } : section
+    );
+    onDataChange({ ...data, sections: newSections });
+  };
+
+  const addSection = () => {
+    const newSection: Section = {
+      id: `custom-${Date.now()}`,
+      type: 'custom',
+      title: 'New Section',
+      content: 'Some editable text...'
+    };
+    onDataChange({ ...data, sections: [...data.sections, newSection] });
+  };
+
+  const removeSection = (sectionId: string) => {
+    const newSections = data.sections.filter(section => section.id !== sectionId);
+    onDataChange({ ...data, sections: newSections });
+  };
+
+  const moveSection = (sectionId: string, direction: 'up' | 'down') => {
+    const index = data.sections.findIndex(s => s.id === sectionId);
+    if (index === -1) return;
+
+    const newSections = [...data.sections];
+    const [section] = newSections.splice(index, 1);
+
+    if (direction === 'up') {
+      if (index > 0) {
+        newSections.splice(index - 1, 0, section);
       }
-
-      current[keys[keys.length - 1]] = editValue
-      onDataChange(newData)
-      setEditingField(null)
+    } else {
+      if (index < newSections.length) {
+        newSections.splice(index + 1, 0, section);
+      }
     }
+    onDataChange({ ...data, sections: newSections });
+  };
 
-    const cancelEdit = () => {
-      setEditingField(null)
-      setEditValue('')
-    }
-
-    const EditableText = ({
-      field,
-      value,
-      className,
-      multiline = false,
-    }: {
-      field: string
-      value: string
-      className?: string
-      multiline?: boolean
-    }) => {
-      const isEditing = editingField === field
-
-      if (isEditing) {
+  const renderSectionContent = (section: Section) => {
+    switch (section.type) {
+      case 'education':
         return (
-          <div className="flex items-start gap-2">
-            {multiline ? (
-              <textarea
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                className="flex-1 px-2 py-1 bg-background border border-primary rounded text-sm resize-none"
-                rows={3}
-                autoFocus
-              />
-            ) : (
-              <input
-                type="text"
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                className="flex-1 px-2 py-1 bg-background border border-primary rounded text-sm"
-                autoFocus
-              />
-            )}
-            <div className="flex gap-1">
-              <button
-                onClick={() => saveEdit(field)}
-                className="p-1 hover:bg-primary/20 rounded"
-              >
-                <Check className="w-4 h-4 text-green-500" />
-              </button>
-              <button
-                onClick={cancelEdit}
-                className="p-1 hover:bg-primary/20 rounded"
-              >
-                <X className="w-4 h-4 text-red-500" />
-              </button>
-            </div>
+          <div>
+            {section.content.map((edu: any, index: number) => (
+              <div key={index} className="mb-2 relative group">
+                 <div className="flex justify-between items-start">
+                  <p className="font-bold"><Editable value={edu.school} onSave={(v) => {
+                    const newContent = [...section.content];
+                    newContent[index] = { ...newContent[index], school: v };
+                    handleSectionContentChange(section.id, newContent);
+                  }} /></p>
+                  <p className="italic"><Editable value={edu.year} onSave={(v) => {
+                    const newContent = [...section.content];
+                    newContent[index] = { ...newContent[index], year: v };
+                    handleSectionContentChange(section.id, newContent);
+                  }} /></p>
+                </div>
+                <p className="italic"><Editable value={edu.degree} onSave={(v) => {
+                  const newContent = [...section.content];
+                  newContent[index] = { ...newContent[index], degree: v };
+                  handleSectionContentChange(section.id, newContent);
+                }} /></p>
+                <button onClick={() => {
+                  const newContent = section.content.filter((_: any, i: number) => i !== index);
+                  handleSectionContentChange(section.id, newContent);
+                }} className="absolute -top-2 -right-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16} /></button>
+              </div>
+            ))}
+            <button onClick={() => {
+              const newContent = [...section.content, { school: 'New University', degree: 'New Degree', year: 'Year' }];
+              handleSectionContentChange(section.id, newContent);
+            }} className="text-blue-500"><PlusCircle size={16} /></button>
           </div>
-        )
-      }
-
-      return (
-        <div
-          onClick={() => startEdit(field, value)}
-          className={`cursor-pointer hover:bg-primary/10 rounded px-2 py-1 -mx-2 -my-1 group ${className}`}
-        >
-          {value}
-          <Edit2 className="w-3 h-3 inline-block ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
-        </div>
-      )
-    }
-
-    return (
-      <div
-        ref={ref}
-        className={`${
-          theme === 'dark' ? 'bg-[#1a1a1a] text-white' : 'bg-white text-gray-900'
-        } shadow-2xl rounded-lg overflow-hidden`}
-      >
-        <div className="p-8 md:p-12 space-y-6">
-          {/* Header */}
-          <div className="text-center border-b pb-6" style={{ borderColor: theme === 'dark' ? '#333' : '#e5e7eb' }}>
-            <EditableText
-              field="name"
-              value={data.name}
-              className="text-4xl font-bold mb-2"
-            />
-            <EditableText
-              field="title"
-              value={data.title}
-              className="text-xl text-gray-400 mb-4"
-            />
-            <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-400">
-              <div className="flex items-center gap-1">
-                <Mail className="w-4 h-4" />
-                <EditableText field="email" value={data.email} />
-              </div>
-              <div className="flex items-center gap-1">
-                <Phone className="w-4 h-4" />
-                <EditableText field="phone" value={data.phone} />
-              </div>
-              <div className="flex items-center gap-1">
-                <MapPin className="w-4 h-4" />
-                <EditableText field="location" value={data.location} />
-              </div>
-            </div>
+        );
+      case 'skills':
+        return (
+          <div>
+            <p><span className="font-bold">Programming Languages:</span> <Editable value={(section.content.programmingLanguages || []).join(', ')} onSave={(v) => handleSectionContentChange(section.id, { ...section.content, programmingLanguages: v.split(',').map(s => s.trim())})} /></p>
+            <p><span className="font-bold">Frameworks & Libraries:</span> <Editable value={(section.content.frameworks || []).join(', ')} onSave={(v) => handleSectionContentChange(section.id, { ...section.content, frameworks: v.split(',').map(s => s.trim())})} /></p>
+            <p><span className="font-bold">Database Management:</span> <Editable value={(section.content.databaseManagement || []).join(', ')} onSave={(v) => handleSectionContentChange(section.id, { ...section.content, databaseManagement: v.split(',').map(s => s.trim())})} /></p>
+            <p><span className="font-bold">Developer Tools:</span> <Editable value={(section.content.versionControl || []).join(', ')} onSave={(v) => handleSectionContentChange(section.id, { ...section.content, versionControl: v.split(',').map(s => s.trim())})} /></p>
+            <p><span className="font-bold">Cloud Platforms:</span> <Editable value={(section.content.cloudPlatforms || []).join(', ')} onSave={(v) => handleSectionContentChange(section.id, { ...section.content, cloudPlatforms: v.split(',').map(s => s.trim())})} /></p>
           </div>
-
-          {/* Summary */}
-          <section>
-            <h2 className="text-2xl font-bold mb-3 text-primary">Professional Summary</h2>
-            <EditableText
-              field="summary"
-              value={data.summary}
-              className="text-gray-300 leading-relaxed"
-              multiline
-            />
-          </section>
-
-          {/* Skills */}
-          <section>
-            <h2 className="text-2xl font-bold mb-3 text-primary">Skills</h2>
-            <div className="flex flex-wrap gap-2">
-              {data.skills.map((skill, index) => (
-                <span
-                  key={index}
-                  className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm font-medium"
-                >
-                  {skill}
-                </span>
+        );
+      case 'projects':
+        return (
+          <div>
+            {section.content.map((proj: any, index: number) => (
+              <div key={index} className="mb-3 relative group">
+                <h3 className="font-bold"><Editable value={proj.name} onSave={(v) => {
+                  const newContent = [...section.content];
+                  newContent[index] = { ...newContent[index], name: v };
+                  handleSectionContentChange(section.id, newContent);
+                }} /> | <span className="font-normal italic"><Editable value={proj.tech} onSave={(v) => {
+                  const newContent = [...section.content];
+                  newContent[index] = { ...newContent[index], tech: v };
+                  handleSectionContentChange(section.id, newContent);
+                }} /></span></h3>
+                <p>
+                  <Editable value={proj.githubLink} onSave={(v) => {
+                     const newContent = [...section.content];
+                     newContent[index] = { ...newContent[index], githubLink: v };
+                     handleSectionContentChange(section.id, newContent);
+                  }} /> |{' '}
+                  <Editable value={proj.liveLink} onSave={(v) => {
+                     const newContent = [...section.content];
+                     newContent[index] = { ...newContent[index], liveLink: v };
+                     handleSectionContentChange(section.id, newContent);
+                  }} />
+                </p>
+                <ul className="list-disc list-inside mt-1">
+                  {proj.description.map((desc: string, i: number) => (
+                    <li key={i}><Editable value={desc} onSave={(v) => {
+                      const newDescriptions = [...proj.description];
+                      newDescriptions[i] = v;
+                      const newContent = [...section.content];
+                      newContent[index] = { ...newContent[index], description: newDescriptions };
+                      handleSectionContentChange(section.id, newContent);
+                    }} /></li>
+                  ))}
+                </ul>
+                <button onClick={() => {
+                  const newContent = section.content.filter((_: any, i: number) => i !== index);
+                  handleSectionContentChange(section.id, newContent);
+                }} className="absolute -top-2 -right-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16} /></button>
+              </div>
+            ))}
+            <button onClick={() => {
+              const newContent = [...section.content, { name: 'New Project', tech: 'Tech Stack', githubLink: 'github.com', liveLink: 'live.com', description: ['Description point 1'] }];
+              handleSectionContentChange(section.id, newContent);
+            }} className="text-blue-500"><PlusCircle size={16} /></button>
+          </div>
+        );
+      case 'achievements':
+      case 'positionsOfResponsibility':
+        return (
+          <div>
+            <ul className="list-disc list-inside">
+              {section.content.map((item: string, index: number) => (
+                <li key={index} className="relative group">
+                  <Editable value={item} onSave={(v) => {
+                    const newContent = [...section.content];
+                    newContent[index] = v;
+                    handleSectionContentChange(section.id, newContent);
+                  }} />
+                  <button onClick={() => {
+                    const newContent = section.content.filter((_: any, i: number) => i !== index);
+                    handleSectionContentChange(section.id, newContent);
+                  }} className="absolute top-0 -right-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16} /></button>
+                </li>
               ))}
-            </div>
-          </section>
+            </ul>
+            <button onClick={() => {
+              const newContent = [...section.content, 'New Item'];
+              handleSectionContentChange(section.id, newContent);
+            }} className="text-blue-500 mt-1"><PlusCircle size={16} /></button>
+          </div>
+        );
+      case 'custom':
+        return <Editable value={section.content} onSave={(v) => handleSectionContentChange(section.id, v)} />;
+      default:
+        return null;
+    }
+  };
 
-          {/* Experience */}
-          <section>
-            <h2 className="text-2xl font-bold mb-4 text-primary">Experience</h2>
-            {data.experience.map((exp, index) => (
-              <div key={index} className="mb-4">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <EditableText
-                      field={`experience.${index}.position`}
-                      value={exp.position}
-                      className="text-xl font-semibold"
-                    />
-                    <EditableText
-                      field={`experience.${index}.company`}
-                      value={exp.company}
-                      className="text-gray-400"
-                    />
-                  </div>
-                  <EditableText
-                    field={`experience.${index}.duration`}
-                    value={exp.duration}
-                    className="text-gray-400 text-sm"
-                  />
-                </div>
-                <EditableText
-                  field={`experience.${index}.description`}
-                  value={exp.description}
-                  className="text-gray-300"
-                  multiline
-                />
-              </div>
-            ))}
-          </section>
+  return (
+    <div ref={ref} className="w-full max-w-4xl mx-auto p-8 bg-white shadow-lg rounded-lg border border-gray-200 text-sm">
+      {/* Header */}
+      <header className="text-center mb-6">
+        <h1 className="text-4xl font-bold tracking-wider"><Editable value={data.name} onSave={(v) => handleFieldChange('name', v)} /></h1>
+        <p className="mt-2">
+          <Editable value={data.phone} onSave={(v) => handleFieldChange('phone', v)} /> |{' '}
+          <Editable value={data.email} onSave={(v) => handleFieldChange('email', v)} /> |{' '}
+          <Editable value={data.linkedin} onSave={(v) => handleFieldChange('linkedin', v)} /> |{' '}
+          <Editable value={data.github} onSave={(v) => handleFieldChange('github', v)} />
+        </p>
+      </header>
 
-          {/* Education */}
-          <section>
-            <h2 className="text-2xl font-bold mb-4 text-primary">Education</h2>
-            {data.education.map((edu, index) => (
-              <div key={index} className="mb-3">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <EditableText
-                      field={`education.${index}.degree`}
-                      value={edu.degree}
-                      className="text-lg font-semibold"
-                    />
-                    <EditableText
-                      field={`education.${index}.school`}
-                      value={edu.school}
-                      className="text-gray-400"
-                    />
-                  </div>
-                  <EditableText
-                    field={`education.${index}.year`}
-                    value={edu.year}
-                    className="text-gray-400"
-                  />
-                </div>
-              </div>
-            ))}
-          </section>
+      {/* Sections */}
+      {data.sections.map((section, index) => (
+        <section key={section.id} className="mb-4 relative group">
+          <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center bg-gray-100 rounded-md p-1">
+            <button onClick={() => moveSection(section.id, 'up')} disabled={index === 0} className="p-1 text-gray-600 hover:text-black disabled:opacity-20"><ArrowUp size={16} /></button>
+            <button onClick={() => moveSection(section.id, 'down')} disabled={index === data.sections.length - 1} className="p-1 text-gray-600 hover:text-black disabled:opacity-20"><ArrowDown size={16} /></button>
+            <button onClick={() => removeSection(section.id)} className="p-1 text-red-500 hover:text-red-700"><Trash2 size={16} /></button>
+          </div>
+          <h2 className="text-lg font-semibold border-b-2 border-black pb-1 mb-2">
+            <Editable value={section.title} onSave={(v) => handleSectionTitleChange(section.id, v)} />
+          </h2>
+          {renderSectionContent(section)}
+        </section>
+      ))}
 
-          {/* Projects */}
-          <section>
-            <h2 className="text-2xl font-bold mb-4 text-primary">Projects</h2>
-            {data.projects.map((project, index) => (
-              <div key={index} className="mb-4">
-                <EditableText
-                  field={`projects.${index}.name`}
-                  value={project.name}
-                  className="text-xl font-semibold mb-1"
-                />
-                <EditableText
-                  field={`projects.${index}.description`}
-                  value={project.description}
-                  className="text-gray-300 mb-1"
-                  multiline
-                />
-                <EditableText
-                  field={`projects.${index}.tech`}
-                  value={project.tech}
-                  className="text-sm text-gray-400"
-                />
-              </div>
-            ))}
-          </section>
-        </div>
+      <div className="mt-6 text-center">
+        <button onClick={addSection} className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 mx-auto">
+          <PlusCircle size={16} />
+          Add Section
+        </button>
       </div>
-    )
-  }
-)
+    </div>
+  );
+});
 
-ResumePreview.displayName = 'ResumePreview'
-
-export default ResumePreview
+export default ResumePreview;

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Send, Loader2, Download, Sparkles, Settings } from 'lucide-react'
 import html2pdf from 'html2pdf.js'
@@ -10,30 +10,23 @@ interface Message {
   content: string
 }
 
+export interface Section {
+  id: string;
+  type: 'education' | 'skills' | 'projects' | 'achievements' | 'positionsOfResponsibility' | 'experience' | 'custom';
+  title: string;
+  content: any;
+}
+
 export interface ResumeData {
-  name: string
-  title: string
-  email: string
-  phone: string
-  location: string
-  summary: string
-  skills: string[]
-  experience: Array<{
-    company: string
-    position: string
-    duration: string
-    description: string
-  }>
-  education: Array<{
-    school: string
-    degree: string
-    year: string
-  }>
-  projects: Array<{
-    name: string
-    description: string
-    tech: string
-  }>
+  name: string;
+  title: string;
+  email: string;
+  phone: string;
+  location: string;
+  linkedin: string;
+  github: string;
+  summary: string;
+  sections: Section[];
 }
 
 interface BuilderPageProps {
@@ -57,37 +50,85 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
 
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000'
 
-  const [resumeData, setResumeData] = useState<ResumeData>({
+  const initialResumeData: ResumeData = {
     name: 'Your Name',
     title: 'Professional Title',
     email: 'email@example.com',
     phone: '(123) 456-7890',
     location: 'City, State',
+    linkedin: 'linkedin.com/in/yourname',
+    github: 'github.com/yourname',
     summary: 'A brief professional summary highlighting your key qualifications and career objectives.',
-    skills: ['Skill 1', 'Skill 2', 'Skill 3', 'Skill 4'],
-    experience: [
+    sections: [
       {
-        company: 'Company Name',
-        position: 'Job Title',
-        duration: '2020 - Present',
-        description: 'Brief description of your role and achievements.',
+        id: 'education',
+        type: 'education',
+        title: 'EDUCATION',
+        content: [
+          {
+            school: 'University Name',
+            degree: 'Degree Name',
+            year: '2020',
+          },
+        ],
+      },
+      {
+        id: 'skills',
+        type: 'skills',
+        title: 'TECHNICAL SKILLS',
+        content: {
+          programmingLanguages: ['JavaScript', 'Python'],
+          frameworks: ['React', 'Node.js'],
+          databaseManagement: ['MongoDB', 'PostgreSQL'],
+          versionControl: ['Git', 'GitHub'],
+          cloudPlatforms: ['AWS', 'Firebase'],
+        },
+      },
+      {
+        id: 'projects',
+        type: 'projects',
+        title: 'PROJECTS',
+        content: [
+          {
+            name: 'Project Name',
+            description: ['Bullet point 1', 'Bullet point 2'],
+            tech: 'Technologies used',
+            githubLink: 'github.com/yourname/project',
+            liveLink: 'yourproject.com',
+          },
+        ],
+      },
+      {
+        id: 'achievements',
+        type: 'achievements',
+        title: 'ACHIEVEMENTS',
+        content: ['Achievement 1', 'Achievement 2'],
+      },
+      {
+        id: 'positionsOfResponsibility',
+        type: 'positionsOfResponsibility',
+        title: 'POSITIONS OF RESPONSIBILITY',
+        content: ['Position of Responsibility 1'],
       },
     ],
-    education: [
-      {
-        school: 'University Name',
-        degree: 'Degree Name',
-        year: '2020',
-      },
-    ],
-    projects: [
-      {
-        name: 'Project Name',
-        description: 'Brief project description',
-        tech: 'Technologies used',
-      },
-    ],
-  })
+  };
+
+  const [resumeData, setResumeData] = useState<ResumeData>(() => {
+    const savedData = localStorage.getItem('resumeData');
+    if (savedData) {
+      try {
+        return JSON.parse(savedData);
+      } catch (e) {
+        console.error("Error parsing resume data from localStorage", e);
+        return initialResumeData;
+      }
+    }
+    return initialResumeData;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('resumeData', JSON.stringify(resumeData));
+  }, [resumeData]);
 
   const handleSend = async () => {
     if (!input.trim()) return
@@ -150,11 +191,12 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
         if (hasResumeData) {
           // Update resume data with AI response (only update provided fields)
           setResumeData((prev) => {
-            const newProjects = parsedData.projects ? parsedData.projects.map(p => ({
-              name: p.name || '',
-              description: p.description || '',
-              tech: p.tech || '',
-            })) : prev.projects;
+            const newSections = prev.sections.map(section => {
+              if (parsedData[section.id]) {
+                return { ...section, content: parsedData[section.id] };
+              }
+              return section;
+            });
 
             return {
               ...prev,
@@ -163,12 +205,11 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
               email: parsedData.email || prev.email,
               phone: parsedData.phone || prev.phone,
               location: parsedData.location || prev.location,
+              linkedin: parsedData.linkedin || prev.linkedin,
+              github: parsedData.github || prev.github,
               summary: parsedData.summary || prev.summary,
-              skills: parsedData.skills || prev.skills,
-              experience: parsedData.experience || prev.experience,
-              education: parsedData.education || prev.education,
-              projects: newProjects,
-            }
+              sections: newSections,
+            };
           })
 
           const aiResponse: Message = {
