@@ -267,6 +267,27 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
                           }
                         }
                         return { ...section, content: newSkillsContent };
+                      }
+                      // Mergeable sections: experience, positionsOfResponsibility, projects, achievements
+                      else if ([
+                        'experience',
+                        'positionsOfResponsibility',
+                        'projects',
+                        'achievements'
+                      ].includes(section.id) && Array.isArray(value)) {
+                        // Merge arrays, append new items
+                        const prevArr = Array.isArray(section.content) ? section.content : [];
+                        // Avoid duplicates by checking for identical objects (shallow)
+                        const mergedArr = [...prevArr];
+                        value.forEach(aiItem => {
+                          // Check if aiItem already exists in prevArr (shallow compare)
+                          const exists = prevArr.some(prevItem => {
+                            // Compare by stringifying (simple, not perfect)
+                            return JSON.stringify(prevItem) === JSON.stringify(aiItem);
+                          });
+                          if (!exists) mergedArr.push(aiItem);
+                        });
+                        return { ...section, content: mergedArr };
                       } else {
                         return { ...section, content: value };
                       }
