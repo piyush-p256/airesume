@@ -323,7 +323,10 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
   };
 
   return (
-    <div ref={ref} className="w-full max-w-4xl mx-auto p-8 bg-white shadow-lg rounded-lg border border-gray-200 text-sm">
+    <div
+      ref={ref}
+      className="w-full max-w-4xl mx-auto p-8 bg-white text-black shadow-lg rounded-lg border border-gray-200 text-sm dark:bg-zinc-900 dark:text-white dark:border-zinc-700 transition-colors duration-300"
+    >
       {/* Header */}
       <header className="text-center mb-6">
         <h1 className="text-4xl font-bold tracking-wider"><Editable value={data.name} onSave={(v) => handleFieldChange('name', v)} /></h1>
@@ -337,19 +340,19 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
 
       {/* Professional Summary */}
       <section className="mb-4">
-        <h2 className="text-lg font-semibold border-b-2 border-black pb-1 mb-2">PROFESSIONAL SUMMARY</h2>
+        <h2 className="text-lg font-semibold border-b-2 border-black dark:border-white pb-1 mb-2">PROFESSIONAL SUMMARY</h2>
         <Editable value={data.professional_summary} onSave={(v) => handleFieldChange('professional_summary', v)} />
       </section>
 
       {/* Sections */}
       {data.sections.map((section, index) => (
         <section key={section.id} className="mb-4 relative group">
-          <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center bg-gray-100 rounded-md p-1">
-            <button onClick={() => {}} disabled={index === 0} className="p-1 text-gray-600 hover:text-black disabled:opacity-20"><ArrowUp size={16} /></button>
-            <button onClick={() => {}} disabled={index === data.sections.length - 1} className="p-1 text-gray-600 hover:text-black disabled:opacity-20"><ArrowDown size={16} /></button>
+          <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center bg-gray-100 dark:bg-zinc-800 rounded-md p-1">
+            <button onClick={() => {}} disabled={index === 0} className="p-1 text-gray-600 hover:text-black dark:text-gray-300 dark:hover:text-white disabled:opacity-20"><ArrowUp size={16} /></button>
+            <button onClick={() => {}} disabled={index === data.sections.length - 1} className="p-1 text-gray-600 hover:text-black dark:text-gray-300 dark:hover:text-white disabled:opacity-20"><ArrowDown size={16} /></button>
             <button onClick={() => {}} className="p-1 text-red-500 hover:text-red-700"><Trash2 size={16} /></button>
           </div>
-          <h2 className="text-lg font-semibold border-b-2 border-black pb-1 mb-2">
+          <h2 className="text-lg font-semibold border-b-2 border-black dark:border-white pb-1 mb-2">
             <Editable value={section.title} onSave={(v) => handleSectionTitleChange(section.id, v)} />
           </h2>
           {renderSectionContent(section)}

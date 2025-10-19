@@ -25,6 +25,7 @@ export interface ResumeData {
   location: string;
   linkedin: string;
   github: string;
+  professional_summary: string;
   sections: Section[];
 }
 
