@@ -189,7 +189,7 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
                   handleSectionContentChange(section.id, newContent);
                 }} /></p>
                 <ul className="list-disc list-inside mt-1">
-                  {Array.isArray(exp.description) && exp.description.map((desc: string, i: number) => (
+                  {Array.isArray(exp.description) && exp.description.map((desc, i) => (
                     <li key={i}><Editable value={desc} onSave={(v) => {
                       const newDescriptions = [...exp.description];
                       newDescriptions[i] = v;
@@ -259,7 +259,7 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
                   handleSectionContentChange(section.id, newContent);
                 }} /></p>
                 <ul className="list-disc list-inside mt-1">
-                  {Array.isArray(pos.description) && pos.description.map((desc: string, i: number) => (
+                  {Array.isArray(pos.description) && pos.description.map((desc, i) => (
                     <li key={i}><Editable value={desc} onSave={(v) => {
                       const newDescriptions = [...pos.description];
                       newDescriptions[i] = v;
