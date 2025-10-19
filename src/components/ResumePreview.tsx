@@ -81,13 +81,55 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
           </div>
         );
       case 'skills':
+        // Dynamic skills categories
+        const skillCategories = Object.entries(section.content);
         return (
           <div>
-            <p><span className="font-bold">Programming Languages:</span> <Editable value={(section.content.programmingLanguages || []).join(', ')} onSave={(v) => handleSectionContentChange(section.id, { ...section.content, programmingLanguages: v.split(',').map(s => s.trim())})} /></p>
-            <p><span className="font-bold">Frameworks & Libraries:</span> <Editable value={(section.content.frameworks || []).join(', ')} onSave={(v) => handleSectionContentChange(section.id, { ...section.content, frameworks: v.split(',').map(s => s.trim())})} /></p>
-            <p><span className="font-bold">Database Management:</span> <Editable value={(section.content.databaseManagement || []).join(', ')} onSave={(v) => handleSectionContentChange(section.id, { ...section.content, databaseManagement: v.split(',').map(s => s.trim())})} /></p>
-            <p><span className="font-bold">Developer Tools:</span> <Editable value={(section.content.versionControl || []).join(', ')} onSave={(v) => handleSectionContentChange(section.id, { ...section.content, versionControl: v.split(',').map(s => s.trim())})} /></p>
-            <p><span className="font-bold">Cloud Platforms:</span> <Editable value={(section.content.cloudPlatforms || []).join(', ')} onSave={(v) => handleSectionContentChange(section.id, { ...section.content, cloudPlatforms: v.split(',').map(s => s.trim())})} /></p>
+            {skillCategories.map(([key, value], idx) => (
+              <div key={key} className="flex items-center gap-2 mb-2 group relative">
+                <span className="font-bold">
+                  <Editable value={key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} onSave={(newKey) => {
+                    // Rename category
+                    const newContent = { ...section.content };
+                    newContent[newKey.replace(/\s+/g, '')] = newContent[key];
+                    delete newContent[key];
+                    handleSectionContentChange(section.id, newContent);
+                  }} />:
+                </span>
+                <Editable value={Array.isArray(value) ? value.join(', ') : ''} onSave={(v) => {
+                  const newContent = { ...section.content };
+                  newContent[key] = v.split(',').map(s => s.trim()).filter(Boolean);
+                  handleSectionContentChange(section.id, newContent);
+                }} />
+                <button
+                  onClick={() => {
+                    const newContent = { ...section.content };
+                    delete newContent[key];
+                    handleSectionContentChange(section.id, newContent);
+                  }}
+                  className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity ml-2"
+                  title="Delete category"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={() => {
+                // Add new category
+                const newContent = { ...section.content };
+                let newKey = 'NewCategory';
+                let i = 1;
+                while (newContent[newKey]) {
+                  newKey = `NewCategory${i++}`;
+                }
+                newContent[newKey] = [];
+                handleSectionContentChange(section.id, newContent);
+              }}
+              className="text-blue-500 flex items-center gap-1 mt-2"
+            >
+              <PlusCircle size={16} /> Add Category
+            </button>
           </div>
         );
       case 'projects':
