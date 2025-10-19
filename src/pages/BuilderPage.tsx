@@ -203,10 +203,18 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
           }
         }
 
-        const parsedData = JSON.parse(jsonString)
-        
+        // Helper: snake_case to camelCase
+        const toCamel = (str: string) => str.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+
+        // Map all top-level keys to camelCase
+        const parsedRaw = JSON.parse(jsonString);
+        const parsedData: any = {};
+        Object.keys(parsedRaw).forEach((key) => {
+          parsedData[toCamel(key)] = parsedRaw[key];
+        });
+
         // Validate that parsedData has at least one resume key
-        const resumeKeys = ['name', 'title', 'email', 'phone', 'location', 'professional_summary', 'skills', 'experience', 'education', 'projects'];
+        const resumeKeys = ['name', 'title', 'email', 'phone', 'location', 'professional_summary', 'skills', 'experience', 'education', 'projects', 'positionsOfResponsibility'];
         const hasResumeData = Object.keys(parsedData).some(key => resumeKeys.includes(key));
 
         if (hasResumeData) {
@@ -214,7 +222,7 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
           setResumeData(prev => {
             const newResumeData = { ...prev };
 
-            const isAiValueEmpty = (value) => {
+            const isAiValueEmpty = (value: any) => {
               if (value === null || value === undefined || value === '') return true;
               if (Array.isArray(value) && value.length === 0) return true;
               if (typeof value === 'object' && Object.keys(value).length === 0) return true;
@@ -263,7 +271,6 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
             return newResumeData;
           });
 
-
           const aiResponse: Message = {
             role: 'assistant',
             content: "Great! I've updated your resume with the information you provided. You can continue adding more details or click on any section in the resume to edit it directly.",
@@ -300,9 +307,9 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
     const opt = {
       margin: 0,
       filename: `${resumeData.name.replace(/\s+/g, '_')}_Resume.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
+      image: { type: 'jpeg' as 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' as 'portrait' },
     }
 
     html2pdf().set(opt).from(resumeRef.current).save()
@@ -418,7 +425,6 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
             ref={resumeRef}
             data={resumeData}
             onDataChange={setResumeData}
-            theme={theme}
           />
         </div>
       </div>
