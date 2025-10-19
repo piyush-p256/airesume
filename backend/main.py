@@ -65,7 +65,7 @@ The JSON object should have the following keys:
 - \"projects\": array of objects, each with \"name\", \"description\" (as an array of strings), \"tech\" (as a string), \"githubLink\", and \"liveLink\".
 - \"positions_of_responsibility\": array of objects, each with \"organization\", \"position\", \"duration\", and \"description\" (as an array of strings).
 
-Be concise and professional.
+Be concise and professional. Never assume extra info projects,experience and achivements shoul donly be what the user gave nothing extra.
 """
 
 
