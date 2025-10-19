@@ -28,6 +28,7 @@ USER_KEY_PROVIDERS = ["openai", "gemini", "openrouter"]
 class AIRequest(BaseModel):
     prompt: str
     user_api_key: Optional[str] = None
+    current_resume_data: Optional[dict] = None
 
 def get_api_key(provider: str, user_key: Optional[str] = None) -> str:
     """Get API key for provider - fallback or user-provided"""
@@ -44,7 +45,7 @@ def get_api_key(provider: str, user_key: Optional[str] = None) -> str:
         raise HTTPException(status_code=400, detail=f"Unknown provider: {provider}")
 
 def get_system_prompt() -> str:
-    return """You are a professional resume writing assistant. Parse the user's description and return structured resume data in JSON format.
+    base_prompt = """You are a professional resume writing assistant. Parse the user's description and return structured resume data in JSON format.
 
 The JSON object should have the following keys:
 - \"name\": string
@@ -67,6 +68,7 @@ The JSON object should have the following keys:
 
 Be concise and professional. Never assume extra info projects,experience and achivements shoul donly be what the user gave nothing extra.
 """
+    return base_prompt
 
 
 async def call_openai(prompt: str, api_key: str) -> str:
@@ -198,7 +200,15 @@ async def ask_ai(provider: str, request: AIRequest):
     """
     try:
         api_key = get_api_key(provider, request.user_api_key)
-        
+        # Compose system prompt with current resume data if provided
+        system_prompt = get_system_prompt()
+        if request.current_resume_data:
+            system_prompt += (
+                "\n\nHere is the user's current resume data (do not overwrite unrelated fields):\n" +
+                str(request.current_resume_data) +
+                "\n\nOnly update the fields relevant to the user's new input. Do not change or remove any other information."
+            )
+
         if provider == "openai":
             response = await call_openai(request.prompt, api_key)
         elif provider == "gemini":
@@ -211,9 +221,8 @@ async def ask_ai(provider: str, request: AIRequest):
             response = await call_openrouter(request.prompt, api_key)
         else:
             raise HTTPException(status_code=400, detail=f"Unsupported provider: {provider}")
-        
+
         return {"response": response, "provider": provider}
-    
     except HTTPException:
         raise
     except Exception as e:

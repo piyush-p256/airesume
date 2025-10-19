@@ -169,7 +169,7 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
     setError('')
 
     try {
-      // Call backend API
+      // Call backend API with complete current resume data
       const response = await fetch(`${BACKEND_URL}/ask-ai/${selectedProvider}`, {
         method: 'POST',
         headers: {
@@ -178,6 +178,7 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
         body: JSON.stringify({
           prompt: currentInput,
           user_api_key: apiKey || null,
+          current_resume_data: resumeData, // Send full current data
         }),
       })
 
@@ -218,7 +219,7 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
         const hasResumeData = Object.keys(parsedData).some(key => resumeKeys.includes(key));
 
         if (hasResumeData) {
-          // Update resume data with AI response
+          // Update resume data with AI response, merging skills arrays
           setResumeData(prev => {
             const newResumeData = { ...prev };
 
@@ -244,6 +245,7 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
                   newResumeData.sections = newResumeData.sections.map(section => {
                     if (section.id === key) {
                       if (section.id === 'skills') {
+                        // Merge skills arrays
                         const newSkillsContent = { ...section.content };
                         const skillsMapping = {
                           programming_languages: 'programmingLanguages',
@@ -254,7 +256,13 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
                         };
                         for (const aiKey in value) {
                           const frontendKey = skillsMapping[aiKey] || aiKey;
-                          if (Object.prototype.hasOwnProperty.call(value, aiKey) && !isAiValueEmpty(value[aiKey])) {
+                          if (Object.prototype.hasOwnProperty.call(value, aiKey) && Array.isArray(value[aiKey])) {
+                            // Merge arrays, remove duplicates
+                            const prevArr = Array.isArray(newSkillsContent[frontendKey]) ? newSkillsContent[frontendKey] : [];
+                            const aiArr = value[aiKey];
+                            const mergedArr = Array.from(new Set([...prevArr, ...aiArr].filter(Boolean)));
+                            newSkillsContent[frontendKey] = mergedArr;
+                          } else if (Object.prototype.hasOwnProperty.call(value, aiKey) && !isAiValueEmpty(value[aiKey])) {
                             newSkillsContent[frontendKey] = value[aiKey];
                           }
                         }
