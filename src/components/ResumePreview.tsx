@@ -127,6 +127,13 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
                     }} /></li>
                   ))}
                 </ul>
+                {/* Add new description point button */}
+                <button onClick={() => {
+                  const newDescriptions = Array.isArray(proj.description) ? [...proj.description, 'New description point'] : ['New description point'];
+                  const newContent = [...section.content];
+                  newContent[index] = { ...newContent[index], description: newDescriptions };
+                  handleSectionContentChange(section.id, newContent);
+                }} className="text-blue-500 flex items-center gap-1 mt-1"><PlusCircle size={16} /> Add Point</button>
                 <button onClick={() => {
                   const newContent = section.content.filter((_: any, i: number) => i !== index);
                   handleSectionContentChange(section.id, newContent);
