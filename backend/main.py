@@ -52,7 +52,7 @@ The JSON object should have the following keys:
 - \"email\": string
 - \"phone\": string
 - \"location\": string
-- \"summary\": string
+- \"professional_summary\": Add a consice 2-3 line para for the user based on skills and projects. Give the \"string\" 
 - \"skills\": An object with the following keys. If a skill doesn't fit in a category, do your best to place it in the most relevant one.
     - \"programming_languages\": array of strings
     - \"frameworks_and_libraries\": array of strings
@@ -64,9 +64,8 @@ The JSON object should have the following keys:
 - \"education\": array of objects, each with \"school\", \"degree\", \"year\"
 - \"projects\": array of objects, each with \"name\", \"description\" (as an array of strings), \"tech\" (as a string), \"githubLink\", and \"liveLink\".
 - \"positions_of_responsibility\": array of objects, each with \"organization\", \"position\", \"duration\", and \"description\" (as an array of strings).
-- \"custom_sections\": array of objects, each with \"title\", \"items\" (array of objects with \"name\", \"description\")
 
-Be concise and professional. If the user provides information that doesn't fit into the above categories, add it to the \"custom_sections\".
+Be concise and professional.
 """
 
 

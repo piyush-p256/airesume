@@ -12,7 +12,7 @@ interface Message {
 
 export interface Section {
   id: string;
-  type: 'education' | 'skills' | 'projects' | 'achievements' | 'positionsOfResponsibility' | 'experience' | 'custom';
+  type: 'education' | 'skills' | 'projects' | 'achievements' | 'positionsOfResponsibility' | 'experience' | 'custom' | 'professional_summary';
   title: string;
   content: any;
 }
@@ -25,7 +25,6 @@ export interface ResumeData {
   location: string;
   linkedin: string;
   github: string;
-  summary: string;
   sections: Section[];
 }
 
@@ -58,7 +57,7 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
     location: 'City, State',
     linkedin: 'linkedin.com/in/yourname',
     github: 'github.com/yourname',
-    summary: 'A brief professional summary highlighting your key qualifications and career objectives.',
+    professional_summary: 'Software Developer with a strong foundation in backend systems, RESTful API development, and data-driven application design. Proficient in Java, Python, SQL, and modern frameworks like Spring Boot. Hands-on experience with relational and NoSQL databases, cloud platforms (AWS), and version control systems like Git. Adept at debugging, writing clean code, and collaborating in Agile development environments. Passionate about delivering reliable, scalable software that supports sustainable and impactful solutions.',
     sections: [
       {
         id: 'education',
@@ -207,7 +206,7 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
         const parsedData = JSON.parse(jsonString)
         
         // Validate that parsedData has at least one resume key
-        const resumeKeys = ['name', 'title', 'email', 'phone', 'location', 'summary', 'skills', 'experience', 'education', 'projects'];
+        const resumeKeys = ['name', 'title', 'email', 'phone', 'location', 'professional_summary', 'skills', 'experience', 'education', 'projects'];
         const hasResumeData = Object.keys(parsedData).some(key => resumeKeys.includes(key));
 
         if (hasResumeData) {
@@ -223,7 +222,7 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
             };
 
             const knownSectionIds = prev.sections.map(s => s.id);
-            const topLevelKeys = ['name', 'title', 'email', 'phone', 'location', 'summary', 'linkedin', 'github'];
+            const topLevelKeys = ['name', 'title', 'email', 'phone', 'location', 'professional_summary', 'linkedin', 'github'];
 
             for (const key in parsedData) {
               if (Object.prototype.hasOwnProperty.call(parsedData, key)) {
@@ -258,19 +257,12 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
                     }
                     return section;
                   });
-                } else {
-                  // It's a new section
-                  newResumeData.sections.push({
-                    id: key,
-                    type: 'custom',
-                    title: key.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').toUpperCase(),
-                    content: value,
-                  });
                 }
               }
             }
             return newResumeData;
           });
+
 
           const aiResponse: Message = {
             role: 'assistant',

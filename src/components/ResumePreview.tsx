@@ -37,42 +37,15 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
     onDataChange({ ...data, sections: newSections });
   };
 
-  const addSection = () => {
-    const newSection: Section = {
-      id: `custom-${Date.now()}`,
-      type: 'custom',
-      title: 'New Section',
-      content: 'Some editable text...'
-    };
-    onDataChange({ ...data, sections: [...data.sections, newSection] });
-  };
-
-  const removeSection = (sectionId: string) => {
-    const newSections = data.sections.filter(section => section.id !== sectionId);
-    onDataChange({ ...data, sections: newSections });
-  };
-
-  const moveSection = (sectionId: string, direction: 'up' | 'down') => {
-    const index = data.sections.findIndex(s => s.id === sectionId);
-    if (index === -1) return;
-
-    const newSections = [...data.sections];
-    const [section] = newSections.splice(index, 1);
-
-    if (direction === 'up') {
-      if (index > 0) {
-        newSections.splice(index - 1, 0, section);
-      }
-    } else {
-      if (index < newSections.length) {
-        newSections.splice(index + 1, 0, section);
-      }
-    }
-    onDataChange({ ...data, sections: newSections });
-  };
-
   const renderSectionContent = (section: Section) => {
     switch (section.type) {
+      case 'professional_summary':
+        return (
+          <Editable 
+            value={section.content} 
+            onSave={(v) => handleSectionContentChange(section.id, v)} 
+          />
+        );
       case 'education':
         return (
           <div>
@@ -281,8 +254,6 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
             }} className="text-blue-500"><PlusCircle size={16} /></button>
           </div>
         );
-      case 'custom':
-        return <Editable value={section.content} onSave={(v) => handleSectionContentChange(section.id, v)} />;
       default:
         return null;
     }
@@ -301,13 +272,19 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
         </p>
       </header>
 
+      {/* Professional Summary */}
+      <section className="mb-4">
+        <h2 className="text-lg font-semibold border-b-2 border-black pb-1 mb-2">PROFESSIONAL SUMMARY</h2>
+        <Editable value={data.professional_summary} onSave={(v) => handleFieldChange('professional_summary', v)} />
+      </section>
+
       {/* Sections */}
       {data.sections.map((section, index) => (
         <section key={section.id} className="mb-4 relative group">
           <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center bg-gray-100 rounded-md p-1">
-            <button onClick={() => moveSection(section.id, 'up')} disabled={index === 0} className="p-1 text-gray-600 hover:text-black disabled:opacity-20"><ArrowUp size={16} /></button>
-            <button onClick={() => moveSection(section.id, 'down')} disabled={index === data.sections.length - 1} className="p-1 text-gray-600 hover:text-black disabled:opacity-20"><ArrowDown size={16} /></button>
-            <button onClick={() => removeSection(section.id)} className="p-1 text-red-500 hover:text-red-700"><Trash2 size={16} /></button>
+            <button onClick={() => {}} disabled={index === 0} className="p-1 text-gray-600 hover:text-black disabled:opacity-20"><ArrowUp size={16} /></button>
+            <button onClick={() => {}} disabled={index === data.sections.length - 1} className="p-1 text-gray-600 hover:text-black disabled:opacity-20"><ArrowDown size={16} /></button>
+            <button onClick={() => {}} className="p-1 text-red-500 hover:text-red-700"><Trash2 size={16} /></button>
           </div>
           <h2 className="text-lg font-semibold border-b-2 border-black pb-1 mb-2">
             <Editable value={section.title} onSave={(v) => handleSectionTitleChange(section.id, v)} />
@@ -316,12 +293,6 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
         </section>
       ))}
 
-      <div className="mt-6 text-center">
-        <button onClick={addSection} className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 mx-auto">
-          <PlusCircle size={16} />
-          Add Section
-        </button>
-      </div>
     </div>
   );
 });
