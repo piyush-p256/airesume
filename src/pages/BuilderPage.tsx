@@ -73,6 +73,19 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
         ],
       },
       {
+        id: 'experience',
+        type: 'experience',
+        title: 'EXPERIENCE',
+        content: [
+          {
+            company: 'Company Name',
+            position: 'Job Title',
+            duration: 'Jan 2022 - Present',
+            description: ['Responsibility 1', 'Responsibility 2'],
+          },
+        ],
+      },
+      {
         id: 'skills',
         type: 'skills',
         title: 'TECHNICAL SKILLS',
@@ -102,13 +115,22 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
         id: 'achievements',
         type: 'achievements',
         title: 'ACHIEVEMENTS',
-        content: ['Achievement 1', 'Achievement 2'],
+        content: [
+          { name: 'Award Name', description: 'Brief description of achievement' },
+        ],
       },
       {
         id: 'positionsOfResponsibility',
         type: 'positionsOfResponsibility',
         title: 'POSITIONS OF RESPONSIBILITY',
-        content: ['Position of Responsibility 1'],
+        content: [
+          {
+            organization: 'Organization Name',
+            position: 'Your Role',
+            duration: 'Year - Year',
+            description: ['Responsibility 1', 'Responsibility 2'],
+          },
+        ],
       },
     ],
   };

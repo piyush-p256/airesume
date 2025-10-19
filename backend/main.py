@@ -59,14 +59,16 @@ The JSON object should have the following keys:
     - \"database_management\": array of strings
     - \"developer_tools\": array of strings
     - \"cloud_platforms\": array of strings
-- \"experience\": array of objects, each with \"company\", \"position\", \"duration\", \"description\"
+- \"achievements\": array of objects, each with \"name\" and \"description\"
+- \"experience\": array of objects, each with \"company\", \"position\", \"duration\", and \"description\" (as an array of strings).
 - \"education\": array of objects, each with \"school\", \"degree\", \"year\"
-- \"projects\": array of objects, each with \"name\", \"description\", \"tech\"
-- \"positions_of_responsibility\": array of objects, each with \"organization\", \"position\", \"duration\", \"description\"
+- \"projects\": array of objects, each with \"name\", \"description\" (as an array of strings), \"tech\" (as a string), \"githubLink\", and \"liveLink\".
+- \"positions_of_responsibility\": array of objects, each with \"organization\", \"position\", \"duration\", and \"description\" (as an array of strings).
 - \"custom_sections\": array of objects, each with \"title\", \"items\" (array of objects with \"name\", \"description\")
 
 Be concise and professional. If the user provides information that doesn't fit into the above categories, add it to the \"custom_sections\".
 """
+
 
 async def call_openai(prompt: str, api_key: str) -> str:
     """Call OpenAI API"""

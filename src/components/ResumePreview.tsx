@@ -110,7 +110,7 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
       case 'skills':
         return (
           <div>
-                        <p><span className="font-bold">Programming Languages:</span> <Editable value={(section.content.programmingLanguages || []).join(', ')} onSave={(v) => handleSectionContentChange(section.id, { ...section.content, programmingLanguages: v.split(',').map(s => s.trim())})} /></p>
+            <p><span className="font-bold">Programming Languages:</span> <Editable value={(section.content.programmingLanguages || []).join(', ')} onSave={(v) => handleSectionContentChange(section.id, { ...section.content, programmingLanguages: v.split(',').map(s => s.trim())})} /></p>
             <p><span className="font-bold">Frameworks & Libraries:</span> <Editable value={(section.content.frameworks || []).join(', ')} onSave={(v) => handleSectionContentChange(section.id, { ...section.content, frameworks: v.split(',').map(s => s.trim())})} /></p>
             <p><span className="font-bold">Database Management:</span> <Editable value={(section.content.databaseManagement || []).join(', ')} onSave={(v) => handleSectionContentChange(section.id, { ...section.content, databaseManagement: v.split(',').map(s => s.trim())})} /></p>
             <p><span className="font-bold">Developer Tools:</span> <Editable value={(section.content.versionControl || []).join(', ')} onSave={(v) => handleSectionContentChange(section.id, { ...section.content, versionControl: v.split(',').map(s => s.trim())})} /></p>
@@ -144,7 +144,7 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
                   }} />
                 </p>
                 <ul className="list-disc list-inside mt-1">
-                  {proj.description.map((desc: string, i: number) => (
+                  {Array.isArray(proj.description) && proj.description.map((desc: string, i: number) => (
                     <li key={i}><Editable value={desc} onSave={(v) => {
                       const newDescriptions = [...proj.description];
                       newDescriptions[i] = v;
@@ -166,16 +166,61 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
             }} className="text-blue-500"><PlusCircle size={16} /></button>
           </div>
         );
+      case 'experience':
+        return (
+          <div>
+            {section.content.map((exp: any, index: number) => (
+              <div key={index} className="mb-3 relative group">
+                <div className="flex justify-between items-start">
+                  <h3 className="font-bold"><Editable value={exp.company} onSave={(v) => {
+                    const newContent = [...section.content];
+                    newContent[index] = { ...newContent[index], company: v };
+                    handleSectionContentChange(section.id, newContent);
+                  }} /></h3>
+                  <p className="italic"><Editable value={exp.duration} onSave={(v) => {
+                    const newContent = [...section.content];
+                    newContent[index] = { ...newContent[index], duration: v };
+                    handleSectionContentChange(section.id, newContent);
+                  }} /></p>
+                </div>
+                <p className="italic"><Editable value={exp.position} onSave={(v) => {
+                  const newContent = [...section.content];
+                  newContent[index] = { ...newContent[index], position: v };
+                  handleSectionContentChange(section.id, newContent);
+                }} /></p>
+                <ul className="list-disc list-inside mt-1">
+                  {Array.isArray(exp.description) && exp.description.map((desc: string, i: number) => (
+                    <li key={i}><Editable value={desc} onSave={(v) => {
+                      const newDescriptions = [...exp.description];
+                      newDescriptions[i] = v;
+                      const newContent = [...section.content];
+                      newContent[index] = { ...newContent[index], description: newDescriptions };
+                      handleSectionContentChange(section.id, newContent);
+                    }} /></li>
+                  ))}
+                </ul>
+                <button onClick={() => {
+                  const newContent = section.content.filter((_: any, i: number) => i !== index);
+                  handleSectionContentChange(section.id, newContent);
+                }} className="absolute -top-2 -right-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16} /></button>
+              </div>
+            ))}
+            <button onClick={() => {
+              const newContent = [...section.content, { company: 'New Company', position: 'Position', duration: 'Date Range', description: ['Responsibility 1'] }];
+              handleSectionContentChange(section.id, newContent);
+            }} className="text-blue-500"><PlusCircle size={16} /></button>
+          </div>
+        );
       case 'achievements':
-      case 'positionsOfResponsibility':
         return (
           <div>
             <ul className="list-disc list-inside">
-              {section.content.map((item: string, index: number) => (
+              {section.content.map((item: any, index: number) => (
                 <li key={index} className="relative group">
-                  <Editable value={item} onSave={(v) => {
+                  <Editable value={`${item.description} - ${item.name}`} onSave={(v) => {
                     const newContent = [...section.content];
-                    newContent[index] = v;
+                    const parts = v.split(' - ');
+                    newContent[index] = { ...newContent[index], description: parts[0], name: parts[1] };
                     handleSectionContentChange(section.id, newContent);
                   }} />
                   <button onClick={() => {
@@ -186,9 +231,54 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
               ))}
             </ul>
             <button onClick={() => {
-              const newContent = [...section.content, 'New Item'];
+              const newContent = [...section.content, { name: 'New Achievement', description: 'Description' }];
               handleSectionContentChange(section.id, newContent);
             }} className="text-blue-500 mt-1"><PlusCircle size={16} /></button>
+          </div>
+        );
+      case 'positionsOfResponsibility':
+        return (
+          <div>
+            {section.content.map((pos: any, index: number) => (
+              <div key={index} className="mb-3 relative group">
+                <div className="flex justify-between items-start">
+                  <h3 className="font-bold"><Editable value={pos.position} onSave={(v) => {
+                    const newContent = [...section.content];
+                    newContent[index] = { ...newContent[index], position: v };
+                    handleSectionContentChange(section.id, newContent);
+                  }} /></h3>
+                  <p className="italic"><Editable value={pos.duration} onSave={(v) => {
+                    const newContent = [...section.content];
+                    newContent[index] = { ...newContent[index], duration: v };
+                    handleSectionContentChange(section.id, newContent);
+                  }} /></p>
+                </div>
+                <p className="italic"><Editable value={pos.organization} onSave={(v) => {
+                  const newContent = [...section.content];
+                  newContent[index] = { ...newContent[index], organization: v };
+                  handleSectionContentChange(section.id, newContent);
+                }} /></p>
+                <ul className="list-disc list-inside mt-1">
+                  {Array.isArray(pos.description) && pos.description.map((desc: string, i: number) => (
+                    <li key={i}><Editable value={desc} onSave={(v) => {
+                      const newDescriptions = [...pos.description];
+                      newDescriptions[i] = v;
+                      const newContent = [...section.content];
+                      newContent[index] = { ...newContent[index], description: newDescriptions };
+                      handleSectionContentChange(section.id, newContent);
+                    }} /></li>
+                  ))}
+                </ul>
+                <button onClick={() => {
+                  const newContent = section.content.filter((_: any, i: number) => i !== index);
+                  handleSectionContentChange(section.id, newContent);
+                }} className="absolute -top-2 -right-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16} /></button>
+              </div>
+            ))}
+            <button onClick={() => {
+              const newContent = [...section.content, { organization: 'New Organization', position: 'Position', duration: 'Date Range', description: ['Responsibility 1'] }];
+              handleSectionContentChange(section.id, newContent);
+            }} className="text-blue-500"><PlusCircle size={16} /></button>
           </div>
         );
       case 'custom':
