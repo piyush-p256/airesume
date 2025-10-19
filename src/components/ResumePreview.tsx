@@ -118,13 +118,27 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
                 </p>
                 <ul className="list-disc list-inside mt-1">
                   {Array.isArray(proj.description) && proj.description.map((desc: string, i: number) => (
-                    <li key={i}><Editable value={desc} onSave={(v) => {
-                      const newDescriptions = [...proj.description];
-                      newDescriptions[i] = v;
-                      const newContent = [...section.content];
-                      newContent[index] = { ...newContent[index], description: newDescriptions };
-                      handleSectionContentChange(section.id, newContent);
-                    }} /></li>
+                    <li key={i} className="relative group">
+                      <Editable value={desc} onSave={(v) => {
+                        const newDescriptions = [...proj.description];
+                        newDescriptions[i] = v;
+                        const newContent = [...section.content];
+                        newContent[index] = { ...newContent[index], description: newDescriptions };
+                        handleSectionContentChange(section.id, newContent);
+                      }} />
+                      <button
+                        onClick={() => {
+                          const newDescriptions = proj.description.filter((_: any, idx: number) => idx !== i);
+                          const newContent = [...section.content];
+                          newContent[index] = { ...newContent[index], description: newDescriptions };
+                          handleSectionContentChange(section.id, newContent);
+                        }}
+                        className="absolute top-0 -right-5 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Delete point"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </li>
                   ))}
                 </ul>
                 {/* Add new description point button */}
