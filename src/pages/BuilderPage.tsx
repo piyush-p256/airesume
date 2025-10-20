@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Send, Loader2, Download, Sparkles, Settings } from 'lucide-react'
-import html2pdf from 'html2pdf.js'
+import { jsPDF } from "jspdf";
 import ResumePreview from '../components/ResumePreview'
 import AIProviderSelector from '../components/AIProviderSelector'
 import '../components/print-resume.css'
@@ -333,21 +333,153 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
   }
 
   const handleDownloadPDF = () => {
-    if (!resumeRef.current) return
+    const doc = new jsPDF('p', 'pt', 'a4');
+    const margin = 40;
+    let y = margin;
 
-    const resumeElement = resumeRef.current
-    resumeElement.classList.add('light-theme-pdf')
+    // Set fonts and colors
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(24);
+    doc.setTextColor(0, 0, 0);
 
-    const opt = {
-      margin: 0,
-      filename: `${resumeData.name.replace(/\s+/g, '_')}_Resume.pdf`,
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' as 'portrait' },
-    }
+    // Name
+    doc.text(resumeData.name, doc.internal.pageSize.getWidth() / 2, y, { align: 'center' });
+    y += 30;
 
-    html2pdf().set(opt).from(resumeElement).save().then(() => {
-      resumeElement.classList.remove('light-theme-pdf')
-    })
+    // Contact Info
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const contactInfo = `${resumeData.phone} | ${resumeData.email} | ${resumeData.linkedin} | ${resumeData.github}`;
+    doc.text(contactInfo, doc.internal.pageSize.getWidth() / 2, y, { align: 'center' });
+    y += 20;
+
+    // Professional Summary
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PROFESSIONAL SUMMARY', margin, y);
+    y += 5;
+    doc.setDrawColor(0, 0, 0);
+    doc.line(margin, y, doc.internal.pageSize.getWidth() - margin, y);
+    y += 15;
+    doc.setFont('helvetica', 'normal');
+    const summaryLines = doc.splitTextToSize(resumeData.professional_summary, doc.internal.pageSize.getWidth() - margin * 2);
+    doc.text(summaryLines, margin, y);
+    y += summaryLines.length * 12 + 10;
+
+
+    // Sections
+    resumeData.sections.forEach(section => {
+      if (y > doc.internal.pageSize.getHeight() - margin) {
+        doc.addPage();
+        y = margin;
+      }
+
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text(section.title.toUpperCase(), margin, y);
+      y += 5;
+      doc.line(margin, y, doc.internal.pageSize.getWidth() - margin, y);
+      y += 15;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+
+      switch (section.type) {
+        case 'education':
+          section.content.forEach((edu: any) => {
+            doc.setFont('helvetica', 'bold');
+            doc.text(edu.school, margin, y);
+            doc.setFont('helvetica', 'italic');
+            doc.text(edu.year, doc.internal.pageSize.getWidth() - margin, y, { align: 'right' });
+            y += 12;
+            doc.setFont('helvetica', 'italic');
+            doc.text(edu.degree, margin, y);
+            y += 15;
+          });
+          break;
+        case 'experience':
+          section.content.forEach((exp: any) => {
+            doc.setFont('helvetica', 'bold');
+            doc.text(exp.company, margin, y);
+            doc.setFont('helvetica', 'italic');
+            doc.text(exp.duration, doc.internal.pageSize.getWidth() - margin, y, { align: 'right' });
+            y += 12;
+            doc.setFont('helvetica', 'italic');
+            doc.text(exp.position, margin, y);
+            y += 12;
+            doc.setFont('helvetica', 'normal');
+            exp.description.forEach((desc: string) => {
+              const descLines = doc.splitTextToSize(`• ${desc}`, doc.internal.pageSize.getWidth() - margin * 2 - 10);
+              doc.text(descLines, margin + 10, y);
+              y += descLines.length * 12;
+            });
+            y += 10;
+          });
+          break;
+        case 'skills':
+          const skills = Object.entries(section.content).map(([category, skills]) => {
+            const formattedCategory = category.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+            return `${formattedCategory}: ${(skills as string[]).join(', ')}`;
+          }).join('\n');
+          const skillsLines = doc.splitTextToSize(skills, doc.internal.pageSize.getWidth() - margin * 2);
+          doc.text(skillsLines, margin, y);
+          y += skillsLines.length * 12 + 10;
+          break;
+        case 'projects':
+          section.content.forEach((proj: any) => {
+            doc.setFont('helvetica', 'bold');
+            doc.text(proj.name, margin, y);
+            y += 12;
+            doc.setFont('helvetica', 'italic');
+            doc.text(proj.tech, margin, y);
+            y += 12;
+            doc.setFont('helvetica', 'normal');
+            const links = `${proj.githubLink} | ${proj.liveLink}`;
+            doc.text(links, margin, y, {
+            });
+            y += 12;
+            proj.description.forEach((desc: string) => {
+              const descLines = doc.splitTextToSize(`• ${desc}`, doc.internal.pageSize.getWidth() - margin * 2 - 10);
+              doc.text(descLines, margin + 10, y);
+              y += descLines.length * 12;
+            });
+            y += 10;
+          });
+          break;
+        case 'achievements':
+          section.content.forEach((ach: any) => {
+            const achievementText = `${ach.name} - ${ach.description}`;
+            const achievementLines = doc.splitTextToSize(`• ${achievementText}`, doc.internal.pageSize.getWidth() - margin * 2 - 10);
+            doc.text(achievementLines, margin + 10, y);
+            y += achievementLines.length * 12;
+          });
+          y += 10;
+          break;
+        case 'positionsOfResponsibility':
+          section.content.forEach((pos: any) => {
+            doc.setFont('helvetica', 'bold');
+            doc.text(pos.position, margin, y);
+            doc.setFont('helvetica', 'italic');
+            doc.text(pos.duration, doc.internal.pageSize.getWidth() - margin, y, { align: 'right' });
+            y += 12;
+            doc.setFont('helvetica', 'italic');
+            doc.text(pos.organization, margin, y);
+            y += 12;
+            doc.setFont('helvetica', 'normal');
+            pos.description.forEach((desc: string) => {
+              const descLines = doc.splitTextToSize(`• ${desc}`, doc.internal.pageSize.getWidth() - margin * 2 - 10);
+              doc.text(descLines, margin + 10, y);
+              y += descLines.length * 12;
+            });
+            y += 10;
+          });
+          break;
+        default:
+          break;
+      }
+    });
+
+
+    doc.save(`${resumeData.name.replace(/\s+/g, '_')}_Resume.pdf`);
   }
 
   return (
