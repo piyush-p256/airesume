@@ -23,6 +23,9 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
     onDataChange({ ...data, [field]: value });
   };
 
+    const handleDeleteProfessionalSummary = () => {
+      onDataChange({ ...data, professional_summary: '' });
+    };
   const handleSectionTitleChange = (sectionId: string, newTitle: string) => {
     const newSections = data.sections.map(section => 
       section.id === sectionId ? { ...section, title: newTitle } : section
@@ -339,10 +342,15 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
       </header>
 
       {/* Professional Summary */}
-      <section className="mb-4">
-        <h2 className="text-lg font-semibold border-b-2 border-black dark:border-white pb-1 mb-2">PROFESSIONAL SUMMARY</h2>
-        <Editable value={data.professional_summary} onSave={(v) => handleFieldChange('professional_summary', v)} />
-      </section>
+        {data.professional_summary && (
+          <section className="mb-4 relative group">
+            <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center bg-gray-100 dark:bg-zinc-800 rounded-md p-1">
+              <button onClick={handleDeleteProfessionalSummary} className="p-1 text-red-500 hover:text-red-700" title="Delete Professional Summary"><Trash2 size={16} /></button>
+            </div>
+            <h2 className="text-lg font-semibold border-b-2 border-black dark:border-white pb-1 mb-2">PROFESSIONAL SUMMARY</h2>
+            <Editable value={data.professional_summary} onSave={(v) => handleFieldChange('professional_summary', v)} />
+          </section>
+        )}
 
       {/* Sections */}
       {data.sections.map((section, index) => (
