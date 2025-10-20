@@ -4,6 +4,7 @@ import { Send, Loader2, Download, Sparkles, Settings } from 'lucide-react'
 import html2pdf from 'html2pdf.js'
 import ResumePreview from '../components/ResumePreview'
 import AIProviderSelector from '../components/AIProviderSelector'
+import '../components/print-resume.css'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -334,15 +335,19 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
   const handleDownloadPDF = () => {
     if (!resumeRef.current) return
 
+    const resumeElement = resumeRef.current
+    resumeElement.classList.add('light-theme-pdf')
+
     const opt = {
       margin: 0,
       filename: `${resumeData.name.replace(/\s+/g, '_')}_Resume.pdf`,
-      image: { type: 'jpeg' as 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' as 'portrait' },
     }
 
-    html2pdf().set(opt).from(resumeRef.current).save()
+    html2pdf().set(opt).from(resumeElement).save().then(() => {
+      resumeElement.classList.remove('light-theme-pdf')
+    })
   }
 
   return (

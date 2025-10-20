@@ -1,0 +1,19 @@
+
+.light-theme-pdf {
+    background-color: white !important;
+    color: black !important;
+}
+
+.light-theme-pdf div,
+.light-theme-pdf span,
+.light-theme-pdf p,
+.light-theme-pdf h1,
+.light-theme-pdf h2,
+.light-theme-pdf h3,
+.light-theme-pdf h4,
+.light-theme-pdf h5,
+.light-theme-pdf h6,
+.light-theme-pdf a {
+    background-color: transparent !important;
+    color: black !important;
+}
