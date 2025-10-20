@@ -5,19 +5,25 @@ import { PlusCircle, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 interface ResumePreviewProps {
   data: ResumeData;
   onDataChange: (data: ResumeData) => void;
+  isPreview?: boolean;
 }
 
-const Editable = ({ value, onSave, className = '' }: { value: string, onSave: (v: string) => void, className?: string }) => (
-  <span
-    contentEditable
-    suppressContentEditableWarning
-    className={`hover:bg-blue-100 focus:bg-blue-100 focus:outline-none rounded px-1 ${className}`}
-    onBlur={(e) => onSave(e.currentTarget.innerText)}
-    dangerouslySetInnerHTML={{ __html: value || '' }}
-  />
-);
+const Editable = ({ value, onSave, className = '', isPreview }: { value: string, onSave: (v: string) => void, className?: string, isPreview?: boolean }) => {
+  if (isPreview) {
+    return <span className={className} dangerouslySetInnerHTML={{ __html: value || '' }} />;
+  }
+  return (
+    <span
+      contentEditable
+      suppressContentEditableWarning
+      className={`hover:bg-blue-100 focus:bg-blue-100 focus:outline-none rounded px-1 ${className}`}
+      onBlur={(e) => onSave(e.currentTarget.innerText)}
+      dangerouslySetInnerHTML={{ __html: value || '' }}
+    />
+  );
+};
 
-const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ data, onDataChange }, ref) => {
+const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ data, onDataChange, isPreview }, ref) => {
 
   const handleFieldChange = (field: keyof ResumeData, value: any) => {
     onDataChange({ ...data, [field]: value });
@@ -47,32 +53,32 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
             {section.content.map((edu: any, index: number) => (
               <div key={index} className="mb-2 relative group">
                  <div className="flex justify-between items-start">
-                  <p className="font-bold"><Editable value={edu.school} onSave={(v) => {
+                  <p className="font-bold"><Editable isPreview={isPreview} value={edu.school} onSave={(v) => {
                     const newContent = [...section.content];
                     newContent[index] = { ...newContent[index], school: v };
                     handleSectionContentChange(section.id, newContent);
                   }} /></p>
-                  <p className="italic"><Editable value={edu.year} onSave={(v) => {
+                  <p className="italic"><Editable isPreview={isPreview} value={edu.year} onSave={(v) => {
                     const newContent = [...section.content];
                     newContent[index] = { ...newContent[index], year: v };
                     handleSectionContentChange(section.id, newContent);
                   }} /></p>
                 </div>
-                <p className="italic"><Editable value={edu.degree} onSave={(v) => {
+                <p className="italic"><Editable isPreview={isPreview} value={edu.degree} onSave={(v) => {
                   const newContent = [...section.content];
                   newContent[index] = { ...newContent[index], degree: v };
                   handleSectionContentChange(section.id, newContent);
                 }} /></p>
-                <button onClick={() => {
+                {!isPreview && <button onClick={() => {
                   const newContent = section.content.filter((_: any, i: number) => i !== index);
                   handleSectionContentChange(section.id, newContent);
-                }} className="absolute -top-2 -right-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16} /></button>
+                }} className="absolute -top-2 -right-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16} /></button>}
               </div>
             ))}
-            <button onClick={() => {
+            {!isPreview && <button onClick={() => {
               const newContent = [...section.content, { school: 'New University', degree: 'New Degree', year: 'Year' }];
               handleSectionContentChange(section.id, newContent);
-            }} className="text-blue-500"><PlusCircle size={16} /></button>
+            }} className="text-blue-500"><PlusCircle size={16} /></button>}
           </div>
         );
       case 'skills':
@@ -83,7 +89,7 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
             {skillCategories.map(([key, value], idx) => (
               <div key={key} className="flex items-center gap-2 mb-2 group relative">
                 <span className="font-bold">
-                  <Editable value={key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} onSave={(newKey) => {
+                  <Editable isPreview={isPreview} value={key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} onSave={(newKey) => {
                     // Rename category
                     const newContent = { ...section.content };
                     newContent[newKey.replace(/\s+/g, '')] = newContent[key];
@@ -91,12 +97,12 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
                     handleSectionContentChange(section.id, newContent);
                   }} />:
                 </span>
-                <Editable value={Array.isArray(value) ? value.join(', ') : ''} onSave={(v) => {
+                <Editable isPreview={isPreview} value={Array.isArray(value) ? value.join(', ') : ''} onSave={(v) => {
                   const newContent = { ...section.content };
                   newContent[key] = v.split(',').map(s => s.trim()).filter(Boolean);
                   handleSectionContentChange(section.id, newContent);
                 }} />
-                <button
+                {!isPreview && <button
                   onClick={() => {
                     const newContent = { ...section.content };
                     delete newContent[key];
@@ -106,10 +112,10 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
                   title="Delete category"
                 >
                   <Trash2 size={16} />
-                </button>
+                </button>}
               </div>
             ))}
-            <button
+            {!isPreview && <button
               onClick={() => {
                 // Add new category
                 const newContent = { ...section.content };
@@ -124,7 +130,7 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
               className="text-blue-500 flex items-center gap-1 mt-2"
             >
               <PlusCircle size={16} /> Add Category
-            </button>
+            </button>}
           </div>
         );
       case 'projects':
@@ -132,22 +138,22 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
           <div>
             {section.content.map((proj: any, index: number) => (
               <div key={index} className="mb-3 relative group">
-                <h3 className="font-bold"><Editable value={proj.name} onSave={(v) => {
+                <h3 className="font-bold"><Editable isPreview={isPreview} value={proj.name} onSave={(v) => {
                   const newContent = [...section.content];
                   newContent[index] = { ...newContent[index], name: v };
                   handleSectionContentChange(section.id, newContent);
-                }} /> | <span className="font-normal italic"><Editable value={proj.tech} onSave={(v) => {
+                }} /> | <span className="font-normal italic"><Editable isPreview={isPreview} value={proj.tech} onSave={(v) => {
                   const newContent = [...section.content];
                   newContent[index] = { ...newContent[index], tech: v };
                   handleSectionContentChange(section.id, newContent);
                 }} /></span></h3>
                 <p>
-                  <Editable value={proj.githubLink} onSave={(v) => {
+                  <Editable isPreview={isPreview} value={proj.githubLink} onSave={(v) => {
                      const newContent = [...section.content];
                      newContent[index] = { ...newContent[index], githubLink: v };
                      handleSectionContentChange(section.id, newContent);
                   }} /> |{' '}
-                  <Editable value={proj.liveLink} onSave={(v) => {
+                  <Editable isPreview={isPreview} value={proj.liveLink} onSave={(v) => {
                      const newContent = [...section.content];
                      newContent[index] = { ...newContent[index], liveLink: v };
                      handleSectionContentChange(section.id, newContent);
@@ -156,14 +162,14 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
                 <ul className="list-disc list-inside mt-1">
                   {Array.isArray(proj.description) && proj.description.map((desc: string, i: number) => (
                     <li key={i} className="relative group">
-                      <Editable value={desc} onSave={(v) => {
+                      <Editable isPreview={isPreview} value={desc} onSave={(v) => {
                         const newDescriptions = [...proj.description];
                         newDescriptions[i] = v;
                         const newContent = [...section.content];
                         newContent[index] = { ...newContent[index], description: newDescriptions };
                         handleSectionContentChange(section.id, newContent);
                       }} />
-                      <button
+                      {!isPreview && <button
                         onClick={() => {
                           const newDescriptions = proj.description.filter((_: any, idx: number) => idx !== i);
                           const newContent = [...section.content];
@@ -174,27 +180,27 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
                         title="Delete point"
                       >
                         <Trash2 size={14} />
-                      </button>
+                      </button>}
                     </li>
                   ))}
                 </ul>
                 {/* Add new description point button */}
-                <button onClick={() => {
+                {!isPreview && <button onClick={() => {
                   const newDescriptions = Array.isArray(proj.description) ? [...proj.description, 'New description point'] : ['New description point'];
                   const newContent = [...section.content];
                   newContent[index] = { ...newContent[index], description: newDescriptions };
                   handleSectionContentChange(section.id, newContent);
-                }} className="text-blue-500 flex items-center gap-1 mt-1"><PlusCircle size={16} /> Add Point</button>
-                <button onClick={() => {
+                }} className="text-blue-500 flex items-center gap-1 mt-1"><PlusCircle size={16} /> Add Point</button>}
+                {!isPreview && <button onClick={() => {
                   const newContent = section.content.filter((_: any, i: number) => i !== index);
                   handleSectionContentChange(section.id, newContent);
-                }} className="absolute -top-2 -right-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16} /></button>
+                }} className="absolute -top-2 -right-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16} /></button>}
               </div>
             ))}
-            <button onClick={() => {
+            {!isPreview && <button onClick={() => {
               const newContent = [...section.content, { name: 'New Project', tech: 'Tech Stack', githubLink: 'github.com', liveLink: 'live.com', description: ['Description point 1'] }];
               handleSectionContentChange(section.id, newContent);
-            }} className="text-blue-500"><PlusCircle size={16} /></button>
+            }} className="text-blue-500"><PlusCircle size={16} /></button>}
           </div>
         );
       case 'experience':
@@ -203,25 +209,25 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
             {section.content.map((exp: any, index: number) => (
               <div key={index} className="mb-3 relative group">
                 <div className="flex justify-between items-start">
-                  <h3 className="font-bold"><Editable value={exp.company} onSave={(v) => {
+                  <h3 className="font-bold"><Editable isPreview={isPreview} value={exp.company} onSave={(v) => {
                     const newContent = [...section.content];
                     newContent[index] = { ...newContent[index], company: v };
                     handleSectionContentChange(section.id, newContent);
                   }} /></h3>
-                  <p className="italic"><Editable value={exp.duration} onSave={(v) => {
+                  <p className="italic"><Editable isPreview={isPreview} value={exp.duration} onSave={(v) => {
                     const newContent = [...section.content];
                     newContent[index] = { ...newContent[index], duration: v };
                     handleSectionContentChange(section.id, newContent);
                   }} /></p>
                 </div>
-                <p className="italic"><Editable value={exp.position} onSave={(v) => {
+                <p className="italic"><Editable isPreview={isPreview} value={exp.position} onSave={(v) => {
                   const newContent = [...section.content];
                   newContent[index] = { ...newContent[index], position: v };
                   handleSectionContentChange(section.id, newContent);
                 }} /></p>
                 <ul className="list-disc list-inside mt-1">
                   {Array.isArray(exp.description) && exp.description.map((desc, i) => (
-                    <li key={i}><Editable value={desc} onSave={(v) => {
+                    <li key={i}><Editable isPreview={isPreview} value={desc} onSave={(v) => {
                       const newDescriptions = [...exp.description];
                       newDescriptions[i] = v;
                       const newContent = [...section.content];
@@ -230,16 +236,16 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
                     }} /></li>
                   ))}
                 </ul>
-                <button onClick={() => {
+                {!isPreview && <button onClick={() => {
                   const newContent = section.content.filter((_: any, i: number) => i !== index);
                   handleSectionContentChange(section.id, newContent);
-                }} className="absolute -top-2 -right-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16} /></button>
+                }} className="absolute -top-2 -right-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16} /></button>}
               </div>
             ))}
-            <button onClick={() => {
+            {!isPreview && <button onClick={() => {
               const newContent = [...section.content, { company: 'New Company', position: 'Position', duration: 'Date Range', description: ['Responsibility 1'] }];
               handleSectionContentChange(section.id, newContent);
-            }} className="text-blue-500"><PlusCircle size={16} /></button>
+            }} className="text-blue-500"><PlusCircle size={16} /></button>}
           </div>
         );
       case 'achievements':
@@ -248,23 +254,23 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
             <ul className="list-disc list-inside">
               {section.content.map((item: any, index: number) => (
                 <li key={index} className="relative group">
-                  <Editable value={`${item.description} - ${item.name}`} onSave={(v) => {
+                  <Editable isPreview={isPreview} value={`${item.description} - ${item.name}`} onSave={(v) => {
                     const newContent = [...section.content];
                     const parts = v.split(' - ');
                     newContent[index] = { ...newContent[index], description: parts[0], name: parts[1] };
                     handleSectionContentChange(section.id, newContent);
                   }} />
-                  <button onClick={() => {
+                  {!isPreview && <button onClick={() => {
                     const newContent = section.content.filter((_: any, i: number) => i !== index);
                     handleSectionContentChange(section.id, newContent);
-                  }} className="absolute top-0 -right-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16} /></button>
+                  }} className="absolute top-0 -right-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16} /></button>}
                 </li>
               ))}
             </ul>
-            <button onClick={() => {
+            {!isPreview && <button onClick={() => {
               const newContent = [...section.content, { name: 'New Achievement', description: 'Description' }];
               handleSectionContentChange(section.id, newContent);
-            }} className="text-blue-500 mt-1"><PlusCircle size={16} /></button>
+            }} className="text-blue-500 mt-1"><PlusCircle size={16} /></button>}
           </div>
         );
       case 'positionsOfResponsibility':
@@ -273,25 +279,25 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
             {section.content.map((pos: any, index: number) => (
               <div key={index} className="mb-3 relative group">
                 <div className="flex justify-between items-start">
-                  <h3 className="font-bold"><Editable value={pos.position} onSave={(v) => {
+                  <h3 className="font-bold"><Editable isPreview={isPreview} value={pos.position} onSave={(v) => {
                     const newContent = [...section.content];
                     newContent[index] = { ...newContent[index], position: v };
                     handleSectionContentChange(section.id, newContent);
                   }} /></h3>
-                  <p className="italic"><Editable value={pos.duration} onSave={(v) => {
+                  <p className="italic"><Editable isPreview={isPreview} value={pos.duration} onSave={(v) => {
                     const newContent = [...section.content];
                     newContent[index] = { ...newContent[index], duration: v };
                     handleSectionContentChange(section.id, newContent);
                   }} /></p>
                 </div>
-                <p className="italic"><Editable value={pos.organization} onSave={(v) => {
+                <p className="italic"><Editable isPreview={isPreview} value={pos.organization} onSave={(v) => {
                   const newContent = [...section.content];
                   newContent[index] = { ...newContent[index], organization: v };
                   handleSectionContentChange(section.id, newContent);
                 }} /></p>
                 <ul className="list-disc list-inside mt-1">
                   {Array.isArray(pos.description) && pos.description.map((desc, i) => (
-                    <li key={i}><Editable value={desc} onSave={(v) => {
+                    <li key={i}><Editable isPreview={isPreview} value={desc} onSave={(v) => {
                       const newDescriptions = [...pos.description];
                       newDescriptions[i] = v;
                       const newContent = [...section.content];
@@ -300,16 +306,16 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
                     }} /></li>
                   ))}
                 </ul>
-                <button onClick={() => {
+                {!isPreview && <button onClick={() => {
                   const newContent = section.content.filter((_: any, i: number) => i !== index);
                   handleSectionContentChange(section.id, newContent);
-                }} className="absolute -top-2 -right-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16} /></button>
+                }} className="absolute -top-2 -right-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16} /></button>}
               </div>
             ))}
-            <button onClick={() => {
+            {!isPreview && <button onClick={() => {
               const newContent = [...section.content, { organization: 'New Organization', position: 'Position', duration: 'Date Range', description: ['Responsibility 1'] }];
               handleSectionContentChange(section.id, newContent);
-            }} className="text-blue-500"><PlusCircle size={16} /></button>
+            }} className="text-blue-500"><PlusCircle size={16} /></button>}
           </div>
         );
       default:
@@ -324,12 +330,12 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
     >
       {/* Header */}
       <header className="text-center mb-6">
-        <h1 className="text-4xl font-bold tracking-wider"><Editable value={data.name} onSave={(v) => handleFieldChange('name', v)} /></h1>
+        <h1 className="text-4xl font-bold tracking-wider"><Editable isPreview={isPreview} value={data.name} onSave={(v) => handleFieldChange('name', v)} /></h1>
         <p className="mt-2">
-          <Editable value={data.phone} onSave={(v) => handleFieldChange('phone', v)} /> |{' '}
-          <Editable value={data.email} onSave={(v) => handleFieldChange('email', v)} /> |{' '}
-          <Editable value={data.linkedin} onSave={(v) => handleFieldChange('linkedin', v)} /> |{' '}
-          <Editable value={data.github} onSave={(v) => handleFieldChange('github', v)} />
+          <Editable isPreview={isPreview} value={data.phone} onSave={(v) => handleFieldChange('phone', v)} /> |{' '}
+          <Editable isPreview={isPreview} value={data.email} onSave={(v) => handleFieldChange('email', v)} /> |{' '}
+          <Editable isPreview={isPreview} value={data.linkedin} onSave={(v) => handleFieldChange('linkedin', v)} /> |{' '}
+          <Editable isPreview={isPreview} value={data.github} onSave={(v) => handleFieldChange('github', v)} />
         </p>
       </header>
 
@@ -337,14 +343,14 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
         {data.professional_summary ? (
           <section className="mb-4 relative group">
             <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center bg-gray-100 dark:bg-zinc-800 rounded-md p-1">
-              <button onClick={() => onDataChange({ ...data, professional_summary: '' })} className="p-1 text-red-500 hover:text-red-700" title="Delete Professional Summary"><Trash2 size={16} /></button>
+              {!isPreview && <button onClick={() => onDataChange({ ...data, professional_summary: '' })} className="p-1 text-red-500 hover:text-red-700" title="Delete Professional Summary"><Trash2 size={16} /></button>}
             </div>
             <h2 className="text-lg font-semibold border-b-2 border-black dark:border-white pb-1 mb-2">PROFESSIONAL SUMMARY</h2>
-            <Editable value={data.professional_summary} onSave={(v) => handleFieldChange('professional_summary', v)} />
+            <Editable isPreview={isPreview} value={data.professional_summary} onSave={(v) => handleFieldChange('professional_summary', v)} />
           </section>
         ) : (
           <div className="mb-4">
-            <button onClick={() => onDataChange({ ...data, professional_summary: 'New Professional Summary' })} className="text-blue-500"><PlusCircle size={16} /> Add Professional Summary</button>
+            {!isPreview && <button onClick={() => onDataChange({ ...data, professional_summary: 'New Professional Summary' })} className="text-blue-500"><PlusCircle size={16} /> Add Professional Summary</button>}
           </div>
         )}
 
@@ -352,12 +358,12 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
       {data.sections.map((section, index) => (
         <section key={section.id} className="mb-4 relative group">
           <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center bg-gray-100 dark:bg-zinc-800 rounded-md p-1">
-            <button onClick={() => {}} disabled={index === 0} className="p-1 text-gray-600 hover:text-black dark:text-gray-300 dark:hover:text-white disabled:opacity-20"><ArrowUp size={16} /></button>
-            <button onClick={() => {}} disabled={index === data.sections.length - 1} className="p-1 text-gray-600 hover:text-black dark:text-gray-300 dark:hover:text-white disabled:opacity-20"><ArrowDown size={16} /></button>
-            <button onClick={() => {}} className="p-1 text-red-500 hover:text-red-700"><Trash2 size={16} /></button>
+            {!isPreview && <button onClick={() => {}} disabled={index === 0} className="p-1 text-gray-600 hover:text-black dark:text-gray-300 dark:hover:text-white disabled:opacity-20"><ArrowUp size={16} /></button>}
+            {!isPreview && <button onClick={() => {}} disabled={index === data.sections.length - 1} className="p-1 text-gray-600 hover:text-black dark:text-gray-300 dark:hover:text-white disabled:opacity-20"><ArrowDown size={16} /></button>}
+            {!isPreview && <button onClick={() => {}} className="p-1 text-red-500 hover:text-red-700"><Trash2 size={16} /></button>}
           </div>
           <h2 className="text-lg font-semibold border-b-2 border-black dark:border-white pb-1 mb-2">
-            <Editable value={section.title} onSave={(v) => handleSectionTitleChange(section.id, v)} />
+            <Editable isPreview={isPreview} value={section.title} onSave={(v) => handleSectionTitleChange(section.id, v)} />
           </h2>
           {renderSectionContent(section)}
         </section>

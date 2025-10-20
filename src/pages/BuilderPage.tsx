@@ -47,6 +47,7 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
   const [apiKey, setApiKey] = useState('')
   const [showSettings, setShowSettings] = useState(false)
   const [error, setError] = useState('')
+  const [isPreviewMode, setIsPreviewMode] = useState(false)
   const resumeRef = useRef<HTMLDivElement>(null)
 
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000'
@@ -581,6 +582,12 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
           {/* Action Buttons */}
           <div className="flex justify-end gap-2">
             <button
+              onClick={() => setIsPreviewMode(!isPreviewMode)}
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-transform flex items-center gap-2"
+            >
+              {isPreviewMode ? 'Edit' : 'Preview'}
+            </button>
+            <button
               onClick={handleDownloadPDF}
               className="px-4 py-2 bg-gradient-to-r from-primary to-accent text-white rounded-lg hover:scale-105 transition-transform flex items-center gap-2"
             >
@@ -594,6 +601,7 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
             ref={resumeRef}
             data={resumeData}
             onDataChange={setResumeData}
+            isPreview={isPreviewMode}
           />
         </div>
       </div>
