@@ -23,9 +23,7 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
     onDataChange({ ...data, [field]: value });
   };
 
-    const handleDeleteProfessionalSummary = () => {
-      onDataChange({ ...data, professional_summary: '' });
-    };
+    
   const handleSectionTitleChange = (sectionId: string, newTitle: string) => {
     const newSections = data.sections.map(section => 
       section.id === sectionId ? { ...section, title: newTitle } : section
@@ -42,13 +40,7 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
 
   const renderSectionContent = (section: Section) => {
     switch (section.type) {
-      case 'professional_summary':
-        return (
-          <Editable 
-            value={section.content} 
-            onSave={(v) => handleSectionContentChange(section.id, v)} 
-          />
-        );
+      
       case 'education':
         return (
           <div>
@@ -342,14 +334,18 @@ const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps>(({ da
       </header>
 
       {/* Professional Summary */}
-        {data.professional_summary && (
+        {data.professional_summary ? (
           <section className="mb-4 relative group">
             <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center bg-gray-100 dark:bg-zinc-800 rounded-md p-1">
-              <button onClick={handleDeleteProfessionalSummary} className="p-1 text-red-500 hover:text-red-700" title="Delete Professional Summary"><Trash2 size={16} /></button>
+              <button onClick={() => onDataChange({ ...data, professional_summary: '' })} className="p-1 text-red-500 hover:text-red-700" title="Delete Professional Summary"><Trash2 size={16} /></button>
             </div>
             <h2 className="text-lg font-semibold border-b-2 border-black dark:border-white pb-1 mb-2">PROFESSIONAL SUMMARY</h2>
             <Editable value={data.professional_summary} onSave={(v) => handleFieldChange('professional_summary', v)} />
           </section>
+        ) : (
+          <div className="mb-4">
+            <button onClick={() => onDataChange({ ...data, professional_summary: 'New Professional Summary' })} className="text-blue-500"><PlusCircle size={16} /> Add Professional Summary</button>
+          </div>
         )}
 
       {/* Sections */}

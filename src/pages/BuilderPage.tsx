@@ -354,17 +354,19 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
     y += 20;
 
     // Professional Summary
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('PROFESSIONAL SUMMARY', margin, y);
-    y += 5;
-    doc.setDrawColor(0, 0, 0);
-    doc.line(margin, y, doc.internal.pageSize.getWidth() - margin, y);
-    y += 15;
-    doc.setFont('helvetica', 'normal');
-    const summaryLines = doc.splitTextToSize(resumeData.professional_summary, doc.internal.pageSize.getWidth() - margin * 2);
-    doc.text(summaryLines, margin, y);
-    y += summaryLines.length * 12 + 10;
+    if (resumeData.professional_summary) {
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('PROFESSIONAL SUMMARY', margin, y);
+      y += 5;
+      doc.setDrawColor(0, 0, 0);
+      doc.line(margin, y, doc.internal.pageSize.getWidth() - margin, y);
+      y += 15;
+      doc.setFont('helvetica', 'normal');
+      const summaryLines = doc.splitTextToSize(resumeData.professional_summary, doc.internal.pageSize.getWidth() - margin * 2);
+      doc.text(summaryLines, margin, y);
+      y += summaryLines.length * 12 + 10;
+    }
 
 
     // Sections
