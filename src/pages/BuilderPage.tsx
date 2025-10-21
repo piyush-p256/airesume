@@ -49,6 +49,7 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
   const [error, setError] = useState('')
   const [isPreviewMode, setIsPreviewMode] = useState(false)
   const resumeRef = useRef<HTMLDivElement>(null)
+  
 
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000'
 
@@ -224,7 +225,30 @@ export default function BuilderPage({ theme }: BuilderPageProps) {
         if (hasResumeData) {
           // Update resume data with AI response, merging skills arrays
           setResumeData(prev => {
-            const newResumeData = { ...prev };
+            const isInitialData = JSON.stringify(prev) === JSON.stringify(initialResumeData);
+
+            let newResumeData;
+
+            if (isInitialData) {
+              // If we're starting from the initial template, clear it first
+              newResumeData = {
+                name: '',
+                title: '',
+                email: '',
+                phone: '',
+                location: '',
+                linkedin: '',
+                github: '',
+                professional_summary: '',
+                sections: prev.sections.map(s => ({
+                  ...s,
+                  content: Array.isArray(s.content) ? [] : {},
+                })),
+              };
+            } else {
+              // Otherwise, build on the existing data
+              newResumeData = { ...prev };
+            }
 
             const isAiValueEmpty = (value: any) => {
               if (value === null || value === undefined || value === '') return true;
